@@ -1,1 +1,1 @@
-# FullStack Open Part 3 - step 1 to 8
+# FullStack Open Part 3 - Excercises completed up to 3.12
