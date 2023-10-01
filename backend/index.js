@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
+require("dotenv").config();
+const Person = require("./models/person");
 
 morgan.token("content", (req) => {
   return JSON.stringify(req.body);
@@ -17,31 +19,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("build"));
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
+let persons = [];
 
-app.get("/api/persons", (req, res) => {
-  res.json(persons);
+app.get("/api/persons", (request, response) => {
+  Person.find({}).then((people) => {
+    response.json(people);
+  });
 });
 
 app.post("/api/persons", (req, res) => {
@@ -63,42 +46,37 @@ app.post("/api/persons", (req, res) => {
     });
   }
 
-  const person = {
-    id: Math.floor(Math.random() * 1000),
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(person);
-  res.json(person);
+  person.save().then((savedPerson) => {
+    res.json(savedPerson);
+  });
 });
 
 app.get("/info", (req, res) => {
-  const phoneBookSize = persons.length;
-  const date = new Date();
-  res.send(`<p>Phonebook has info for ${phoneBookSize} people</p>
-
-  <p>${date}</p>`);
+  Person.find({}).then((people) => {
+    console.log(people);
+    const phoneBookSize = people.length;
+    res.send(`<p>There are ${phoneBookSize} people in the phonebook</p>`);
+  });
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const requestedId = +req.params.id;
-  const person = persons.filter((person) => person.id === requestedId);
-
-  if (person.length === 0) {
-    return res.status(404).end();
-  }
-
-  res.json(person);
+  Person.findById(req.params.id).then((person) => {
+    res.json(person);
+  });
 });
 
 app.delete("/api/persons/:id", (req, res) => {
-  const requestedId = +req.params.id;
-  persons = persons.filter((person) => person.id !== requestedId);
-  res.status(204).end();
+  Person.findByIdAndDelete(req.params.id).then((person) => {
+    res.status(204).end();
+  });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
