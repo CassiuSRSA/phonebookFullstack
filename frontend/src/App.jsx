@@ -25,6 +25,23 @@ const App = () => {
   const submitHandler = (e) => {
     e.preventDefault();
 
+    console.log("Log from submit handler");
+
+    const checkNumber = (number) => {
+      return /^\d{2,3}-\d+$/.test(number);
+    };
+    console.log(newName.length);
+    if (!newName.trim() || newName.length < 3 || !checkNumber(newNumber)) {
+      setErrorMessage({
+        message: `Name is too short or number is in wrong format`,
+        errorType: "note error",
+      });
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+      return;
+    }
+
     const clearInputs = () => {
       setNewName("");
       setNewNumber("");
@@ -52,7 +69,11 @@ const App = () => {
               .then((updatedPersons) => setPersons(updatedPersons));
             clearInputs();
           });
-        setErrorMessage(`Change number for '${newName}' to ${newNumber}`);
+        setErrorMessage({
+          message: `Change number for '${newName}' to ${newNumber}`,
+          errorType: "note success",
+        });
+
         setTimeout(() => {
           setErrorMessage(null);
         }, 5000);
@@ -65,9 +86,21 @@ const App = () => {
     const newPerson = { name: newName, number: newNumber };
     setPersons(persons.concat(newPerson));
 
-    personsService.create(newPerson).then((returnedPerson) => {
-      setPersons(persons.concat(returnedPerson));
-    });
+    personsService
+      .create(newPerson)
+      .then((returnedPerson) => {
+        setPersons(persons.concat(returnedPerson));
+      })
+      .catch((error) => {
+        setErrorMessage({
+          message: `${error.response.data.error}`,
+          errorType: "note error",
+        });
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 5000);
+        console.log(error.response.data.error);
+      });
     clearInputs();
     setErrorMessage({
       message: `${newName} was successfully added`,
