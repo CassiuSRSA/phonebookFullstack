@@ -114,6 +114,7 @@ const App = () => {
   const onDelete = (id, name) => {
     if (window.confirm(`Delete ${name}?`)) {
       personsService.deletePerson(id).catch((error) => {
+        console.log(error);
         setErrorMessage({
           message: `${name} has already been deleted`,
           errorType: "note error",

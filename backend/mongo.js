@@ -36,6 +36,7 @@ if (process.argv.length === 5) {
   });
 
   person.save().then((result) => {
+    console.log(result);
     console.log(
       `added ${process.argv[3]} number ${process.argv[4]} to phonebook`
     );
