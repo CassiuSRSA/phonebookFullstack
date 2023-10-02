@@ -14,6 +14,8 @@ const errorHandler = (error, req, res, next) => {
 
   if (error.name === "CastError") {
     return res.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
   }
 
   next(error);
@@ -23,7 +25,7 @@ const unknownEndpoint = (request, res) => {
   res.status(404).send({ error: "unknown endpoint" });
 };
 
-app.use(express.static("build"));
+app.use(express.static("dist"));
 app.use(express.json());
 app.use(cors());
 app.use(
@@ -38,7 +40,7 @@ app.get("/api/persons", (req, res) => {
   });
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
 
   if (!body.name.trim() || !body.number.trim()) {
@@ -47,24 +49,17 @@ app.post("/api/persons", (req, res) => {
     });
   }
 
-  if (
-    persons.find(
-      (persons) => persons.name.toLowerCase() === body.name.toLowerCase()
-    )
-  ) {
-    return res.status(400).json({
-      error: "name must be unique",
-    });
-  }
-
   const person = new Person({
     name: body.name,
     number: body.number,
   });
 
-  person.save().then((savedPerson) => {
-    res.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      res.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/info", (req, res) => {
@@ -88,14 +83,18 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 
 app.put("/api/persons/:id", (req, res, next) => {
-  const body = req.body;
+  const { name, number } = req.body;
 
   const person = {
     name: body.name,
     number: body.number,
   };
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    { new: true, runValidators: true, contex: "query" }
+  )
     .then((updatedPerson) => {
       res.json(updatedPerson);
     })
