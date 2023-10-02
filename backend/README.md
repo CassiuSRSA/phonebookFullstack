@@ -1,1 +1,1 @@
-# FullStack Open Part 3 - Excercises completed up to 3.14
+# FullStack Open Part 3 - Excercises completed up to 3.18
